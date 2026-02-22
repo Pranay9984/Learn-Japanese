@@ -1,0 +1,836 @@
+Here is the updated code. I have added the **complete Hiragana chart (all 46 letters + N)**. Now, when you click any letter, it will show words for that specific letter.
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Learn Japanese - Full Course</title>
+    <style>
+        /* CSS - Simple and Clean UI */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+
+        /* Navigation Tabs */
+        .navbar {
+            background-color: #2c3e50;
+            padding: 15px;
+            text-align: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav-btn {
+            background-color: transparent;
+            color: white;
+            border: 2px solid white;
+            padding: 10px 20px;
+            margin: 0 5px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 20px;
+            transition: all 0.3s;
+        }
+
+        .nav-btn:hover, .nav-btn.active {
+            background-color: #e74c3c;
+            border-color: #e74c3c;
+        }
+
+        /* Container */
+        .container {
+            max-width: 1000px;
+            margin: 20px auto;
+            padding: 0 15px;
+        }
+
+        /* Sections */
+        .section {
+            display: none; /* Hidden by default */
+            animation: fadeIn 0.5s;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Hiragana Grid Styles */
+        .hiragana-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+            gap: 10px;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .kana-btn {
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px 5px;
+            font-size: 24px;
+            cursor: pointer;
+            transition: background 0.2s;
+            text-align: center;
+        }
+
+        .kana-btn:hover, .kana-btn.active {
+            background-color: #3498db;
+            color: white;
+        }
+
+        /* Card Styles */
+        .card {
+            background: white;
+            border-left: 5px solid #e74c3c;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .japanese-text {
+            font-size: 28px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        .romaji {
+            color: #e67e22;
+            font-style: italic;
+            font-weight: bold;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .meaning {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+            font-size: 16px;
+            color: #555;
+        }
+
+        .tag {
+            background: #eee;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            margin-right: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        /* Sentence Styles */
+        .sentence-box {
+            background-color: #f9f9f9;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+            border: 1px solid #eee;
+        }
+
+        .sentence-jp {
+            color: #2980b9;
+            font-weight: bold;
+            margin-bottom: 2px;
+        }
+
+        .sentence-meaning {
+            font-size: 14px;
+            color: #666;
+        }
+
+        h2 {
+            border-bottom: 2px solid #ddd;
+            padding-bottom: 10px;
+            margin-top: 30px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Navigation -->
+    <div class="navbar">
+        <button class="nav-btn active" onclick="showSection('hiragana')">Hiragana</button>
+        <button class="nav-btn" onclick="showSection('vocabulary')">Vocabulary & Sentences</button>
+        <button class="nav-btn" onclick="showSection('kanji')">Kanji (漢字)</button>
+    </div>
+
+    <div class="container">
+
+        <!-- SECTION 1: HIRAGANA -->
+        <div id="hiragana" class="section active">
+            <h1>Step 1: Hiragana (ひらがな)</h1>
+            <p>Click a letter to see basic words starting with it.</p>
+            <div class="hiragana-grid" id="kanaGrid"></div>
+            <div id="hiragana-details" style="margin-top: 20px;"></div>
+        </div>
+
+        <!-- SECTION 2: VOCABULARY -->
+        <div id="vocabulary" class="section">
+            <h1>Common Words & Sentences</h1>
+            <p>Everyday words with Romaji, Meaning, and Example Sentences.</p>
+            <div id="vocab-list"></div>
+        </div>
+
+        <!-- SECTION 3: KANJI -->
+        <div id="kanji" class="section">
+            <h1>Essential Kanji</h1>
+            <p>Chinese characters used in Japanese with meanings and examples.</p>
+            <div id="kanji-list"></div>
+        </div>
+
+    </div>
+
+    <script>
+        // --- DATA SECTION ---
+
+        // 1. COMPLETE HIRAGANA DATA
+        const hiraganaData = {
+            'a': { char: 'あ', rm: 'a', words: [{jp:'ありがとう', rm:'Arigatou', hi:'धन्यवाद', mr:'आभार'}, {jp:'あさ', rm:'Asa', hi:'सुबह', mr:'सकाळ'}] },
+            'i': { char: 'い', rm: 'i', words: [{jp:'いのち', rm:'Inochi', hi:'जीवन', mr:'जीवन'}, {jp:'いす', rm:'Isu', hi:'कुर्सी', mr:'खुर्ची'}] },
+            'u': { char: 'う', rm: 'u', words: [{jp:'うみ', rm:'Umi', hi:'समुद्र', mr:'समुद्र'}, {jp:'うた', rm:'Uta', hi:'गाना', mr:'गाणे'}] },
+            'e': { char: 'え', rm: 'e', words: [{jp:'えき', rm:'Eki', hi:'स्टेशन', mr:'स्टेशन'}, {jp:'えんぴつ', rm:'Enpitsu', hi:'पेंसिल', mr:'पेन्सिल'}] },
+            'o': { char: 'お', rm: 'o', words: [{jp:'おはよう', rm:'Ohayou', hi:'सुप्रभात', mr:'शुभ सकाळ'}, {jp:'おにぎり', rm:'Onigiri', hi:'राइस बॉल', mr:'तांदळाचा गोळा'}] },
+            
+            'ka': { char: 'か', rm: 'ka', words: [{jp:'かぞく', rm:'Kazoku', hi:'परिवार', mr:'कुटुंब'}, {jp:'かわ', rm:'Kawa', hi:'नदी', mr:'नदी'}] },
+            'ki': { char: 'き', rm: 'ki', words: [{jp:'きょう', rm:'Kyou', hi:'आज', mr:'आज'}, {jp:'きつね', rm:'Kitsune', hi:'लोमड़ी', mr:'कोल्हा'}] },
+            'ku': { char: 'く', rm: 'ku', words: [{jp:'くすり', rm:'Kusuri', hi:'दवाई', mr:'औषध'}, {jp:'くち', rm:'Kuchi', hi:'मुंह', mr:'तोंड'}] },
+            'ke': { char: 'け', rm: 'ke', words: [{jp:'けさ', rm:'Kesa', hi:'आज सुबह', mr:'आज सकाळी'}, {jp:'けいさつ', rm:'Keisatsu', hi:'पुलिस', mr:'पोलीस'}] },
+            'ko': { char: 'こ', rm: 'ko', words: [{jp:'こども', rm:'Kodomo', hi:'बच्चा', mr:'मुलगा/मुलगी'}, {jp:'こめ', rm:'Kome', hi:'चावल', mr:'तांदूळ'}] },
+            
+            'sa': { char: 'さ', rm: 'sa', words: [{jp:'さくら', rm:'Sakura', hi:'चेरी ब्लॉसम', mr:'चेरी ब्लॉसम'}, {jp:'さかな', rm:'Sakana', hi:'मछली', mr:'मासा'}] },
+            'shi': { char: 'し', rm: 'shi', words: [{jp:'しんぶん', rm:'Shinbun', hi:'अखबार', mr:'वर्तमानपत्र'}, {jp:'しずか', rm:'Shizuka', hi:'शांत', mr:'शांत'}] },
+            'su': { char: 'す', rm: 'su', words: [{jp:'すし', rm:'Sushi', hi:'सुशी', mr:'सुशी'}, {jp:'すいようび', rm:'Suiyoubi', hi:'बुधवार', mr:'बुधवार'}] },
+            'se': { char: 'せ', rm: 'se', words: [{jp:'せかい', rm:'Sekai', hi:'दुनिया', mr:'जग'}, {jp:'せんせい', rm:'Sensei', hi:'शिक्षक', mr:'शिक्षक'}] },
+            'so': { char: 'そ', rm: 'so', words: [{jp:'そら', rm:'Sora', hi:'आसमान', mr:'आकाश'}, {jp:'そと', rm:'Soto', hi:'बाहर', mr:'बाहेर'}] },
+            
+            'ta': { char: 'た', rm: 'ta', words: [{jp:'たべる', rm:'Taberu', hi:'खाना', mr:'खाणे'}, {jp:'たのしい', rm:'Tanoshii', hi:'मजेदार', mr:'मजेशीर'}] },
+            'chi': { char: 'ち', rm: 'chi', words: [{jp:'ちず', rm:'Chizu', hi:'नक्शा', mr:'नकाशा'}, {jp:'ちち', rm:'Chichi', hi:'पिता', mr:'वडील'}] },
+            'tsu': { char: 'つ', rm: 'tsu', words: [{jp:'つくえ', rm:'Tsukue', hi:'डेस्क', mr:'डेस्क'}, {jp:'つめたい', rm:'Tsumetai', hi:'ठंडा', mr:'थंड'}] },
+            'te': { char: 'て', rm: 'te', words: [{jp:'てがみ', rm:'Tegami', hi:'चिट्ठी', mr:'पत्र'}, {jp:'てぶくろ', rm:'Tebukuro', hi:'दस्ताने', mr:'हातमोजे'}] },
+            'to': { char: 'と', rm: 'to', words: [{jp:'とり', rm:'Tori', hi:'पक्षी', mr:'पक्षी'}, {jp:'ともだち', rm:'Tomodachi', hi:'दोस्त', mr:'मित्र'}] },
+            
+            'na': { char: 'な', rm: 'na', words: [{jp:'なまえ', rm:'Namae', hi:'नाम', mr:'नाव'}, {jp:'なつ', rm:'Natsu', hi:'गर्मी', mr:'उन्हाळा'}] },
+            'ni': { char: 'に', rm: 'ni', words: [{jp:'にく', rm:'Niku', hi:'मांस', mr:'मांस'}, {jp:'にほん', rm:'Nihon', hi:'जापान', mr:'जपान'}] },
+            'nu': { char: 'ぬ', rm: 'nu', words: [{jp:'ぬいぐるみ', rm:'Nuigurumi', hi:'खिलौना', mr:'खेळणे'}, {jp:'ぬるい', rm:'Nurui', hi:'गुनगुना', mr:'कोमट'}] },
+            'ne': { char: 'ね', rm: 'ne', words: [{jp:'ねこ', rm:'Neko', hi:'बिल्ली', mr:'मांजर'}, {jp:'ねる', rm:'Neru', hi:'सोना', mr:'झोपणे'}] },
+            'no': { char: 'の', rm: 'no', words: [{jp:'のむ', rm:'Nomu', hi:'पीना', mr:'पिणे'}, {jp:'のりもの', rm:'Norimono', hi:'वाहन', mr:'वाहन'}] },
+            
+            'ha': { char: 'は', rm: 'ha', words: [{jp:'はな', rm:'Hana', hi:'फूल / नाक', mr:'फूल / नाक'}, {jp:'はし', rm:'Hashi', hi:'छड़ियां', mr:'चॉपस्टिक्स'}] },
+            'hi': { char: 'ひ', rm: 'hi', words: [{jp:'ひる', rm:'Hiru', hi:'दोपहर', mr:'दुपार'}, {jp:'ひこうき', rm:'Hikouki', hi:'हवाई जहाज', mr:'विमान'}] },
+            'fu': { char: 'ふ', rm: 'fu', words: [{jp:'ふね', rm:'Fune', hi:'नाव', mr:'बोट'}, {jp:'ふゆ', rm:'Fuyu', hi:'सर्दी', mr:'हिवाळा'}] },
+            'he': { char: 'へ', rm: 'he', words: [{jp:'へや', rm:'Heya', hi:'कमरा', mr:'खोली'}, {jp:'へび', rm:'Hebi', hi:'सांप', mr:'साप'}] },
+            'ho': { char: 'ほ', rm: 'ho', words: [{jp:'ほん', rm:'Hon', hi:'किताब', mr:'पुस्तक'}, {jp:'ほし', rm:'Hoshi', hi:'तारा', mr:'तारा'}] },
+            
+            'ma': { char: 'ま', rm: 'ma', words: [{jp:'まど', rm:'Mado', hi:'खिड़की', mr:'खिडकी'}, {jp:'まつ', rm:'Matsu', hi:'इंतज़ार करना', mr:'वाट पाहणे'}] },
+            'mi': { char: 'み', rm: 'mi', words: [{jp:'みず', rm:'Mizu', hi:'पानी', mr:'पाणी'}, {jp:'みぎ', rm:'Migi', hi:'दाएं', mr:'उजवे'}] },
+            'mu': { char: 'む', rm: 'mu', words: [{jp:'むし', rm:'Mushi', hi:'कीड़ा', mr:'किडा'}, {jp:'むらさき', rm:'Murasaki', hi:'बैंगनी', mr:'जांभळा'}] },
+            'me': { char: 'め', rm: 'me', words: [{jp:'めがね', rm:'Megane', hi:'चश्मा', mr:'चष्मा'}, {jp:'めずらしい', rm:'Mezurashii', hi:'दुर्लभ', mr:'दुर्मिळ'}] },
+            'mo': { char: 'も', rm: 'mo', words: [{jp:'もも', rm:'Momo', hi:'आड़ू', mr:'पीच'}, {jp:'もよう', rm:'Moyou', hi:'पैटर्न', mr:'नक्षी'}] },
+            
+            'ya': { char: 'や', rm: 'ya', words: [{jp:'やま', rm:'Yama', hi:'पहाड़', mr:'डोंगर'}, {jp:'やすい', rm:'Yasui', hi:'सस्ता', mr:'स्वस्त'}] },
+            'yu': { char: 'ゆ', rm: 'yu', words: [{jp:'ゆき', rm:'Yuki', hi:'बर्फ', mr:'बर्फ'}, {jp:'ゆめ', rm:'Yume', hi:'सपना', mr:'स्वप्न'}] },
+            'yo': { char: 'よ', rm: 'yo', words: [{jp:'よる', rm:'Yoru', hi:'रात', mr:'रात्र'}, {jp:'よい', rm:'Yoi', hi:'अच्छा', mr:'चांगले'}] },
+            
+            'ra': { char: 'ら', rm: 'ra', words: [{jp:'らーめん', rm:'Ramen', hi:'रामेन', mr:'रामेन'}, {jp:'ラジオ', rm:'Rajio', hi:'रेडियो', mr:'रेडिओ'}] },
+            'ri': { char: 'り', rm: 'ri', words: [{jp:'りょうり', rm:'Ryouri', hi:'खाना बनाना', mr:'शेअर'}, {jp:'りんご', rm:'Ringo', hi:'सेब', mr:'सफरचंद'}] },
+            'ru': { char: 'る', rm: 'ru', words: [{jp:'るす', rm:'Rusu', hi:'अनुपस्थिति', mr:'अनुपस्थिती'}, {jp:'るすばん', rm:'Rusuban', hi:'घर की देखभाल', mr:'घराची काळजी'}] },
+            're': { char: 'れ', rm: 're', words: [{jp:'れいぞうこ', rm:'Reizouko', hi:'फ्रिज', mr:'फ्रिज'}, {jp:'レストラン', rm:'Resutoran', hi:'रेस्टोरेंट', mr:'रेस्टॉरंट'}] },
+            'ro': { char: 'ろ', rm: 'ro', words: [{jp:'ろく', rm:'Roku', hi:'छह', mr:'सहा'}, {jp:'ロボット', rm:'Robotto', hi:'रोबोट', mr:'रोबोट'}] },
+            
+            'wa': { char: 'わ', rm: 'wa', words: [{jp:'わたし', rm:'Watashi', hi:'मैं', mr:'मी'}, {jp:'わるい', rm:'Warui', hi:'बुरा', mr:'वाईट'}] },
+            'wo': { char: 'を', rm: 'wo', words: [{jp:'をのみ', rm:'Wonomi', hi:'केवल', mr:'फक्त'}, {jp:'~をください', rm:'~o kudasai', hi:'~ दीजिए', mr:'~ द्या'}] },
+            'n': { char: 'ん', rm: 'n', words: [{jp:'にほんご', rm:'Nihongo', hi:'जापानी भाषा', mr:'जपानी भाषा'}, {jp:'なんですか', rm:'Nandesuka', hi:'यह क्या है?', mr:'हे काय आहे?'}] }
+        };
+
+        // 2. Vocabulary Data (Large List)
+        const vocabularyData = [
+            // Greetings
+            { jp: "こんにちは", rm: "Konnichiwa", hi: "नमस्ते / दोपहर की बधाई", mr: "नमस्कार", 
+              sentences: [
+                  {jp: "こんにちは、お元気ですか？", rm: "Konnichiwa, ogenki desu ka?", hi: "नमस्ते, आप कैसे हैं?", mr: "नमस्कार, तुम्ही कसे आहात?"},
+                  {jp: "今日はいい天気ですね。", rm: "Kyou wa ii tenki desu ne.", hi: "आज मौसम अच्छा है।", mr: "आज हवामान चांगले आहे."}
+              ]
+            },
+            { jp: "おはようございます", rm: "Ohayou gozaimasu", hi: "सुप्रभात (Formal)", mr: "शुभ सकाळ (औपचारिक)", 
+              sentences: [
+                  {jp: "おはようございます、先生。", rm: "Ohayou gozaimasu, sensei.", hi: "सुप्रभात, सर।", mr: "शुभ सकाळ, सर."},
+                  {jp: "毎朝おはようと言います。", rm: "Maiasa ohayou to iimasu.", hi: "मैं हर सुबह नमस्ते कहता हूं।", mr: "मी दररोज सकाळी शुभ सकाळ म्हणतो."}
+              ]
+            },
+            { jp: "こんばんは", rm: "Konbanwa", hi: "शुभ संध्या", mr: "शुभ संध्याकाळ", 
+              sentences: [
+                  {jp: "こんばんは、遅くなりました。", rm: "Konbanwa, osoku narimashita.", hi: "शुभ संध्या, देर हो गई।", mr: "शुभ संध्याकाळ, उशीर झाला."},
+                  {jp: "こんばんは、何を食べますか？", rm: "Konbanwa, nani o tabemasu ka?", hi: "शुभ संध्या, क्या खाएंगे?", mr: "शुभ संध्याकाळ, काय खाणार आहात?"}
+              ]
+            },
+            { jp: "さようなら", rm: "Sayounara", hi: "अलविदा", mr: "अलविदा", 
+              sentences: [
+                  {jp: "さようなら、また明日。", rm: "Sayounara, mata ashita.", hi: "अलविदा, फिर कल मिलेंगे।", mr: "अलविदा, उद्या भेटू."},
+                  {jp: "さようなら、元気でね。", rm: "Sayounara, genki de ne.", hi: "अलविदा, खुश रहना।", mr: "अलविदा, खुश राहा."}
+              ]
+            },
+
+            // People & Family
+            { jp: "家族", rm: "Kazoku", hi: "परिवार", mr: "कुटुंब", 
+              sentences: [
+                  {jp: "私の家族は五人です。", rm: "Watashi no kazoku wa gonin desu.", hi: "मेरे परिवार में पांच लोग हैं।", mr: "माझ्या कुटुंबात पाच जण आहेत."},
+                  {jp: "家族と旅行に行きます。", rm: "Kazoku to ryokou ni ikimasu.", hi: "मैं परिवार के साथ यात्रा पर जा रहा हूं।", mr: "मी कुटुंबासोबत प्रवासावर जात आहे."}
+              ]
+            },
+            { jp: "友達", rm: "Tomodachi", hi: "दोस्त", mr: "मित्र", 
+              sentences: [
+                  {jp: "彼は私の親友です。", rm: "Kare wa watashi no shinyuu desu.", hi: "वह मेरा सबसे अच्छा दोस्त है।", mr: "तो माझा जवळचा मित्र आहे."},
+                  {jp: "友達と映画を見ます。", rm: "Tomodachi to eiga o mimasu.", hi: "मैं दोस्त के साथ फिल्म देखता हूं।", mr: "मी मित्रासोबत चित्रपट पाहतो."}
+              ]
+            },
+            { jp: "先生", rm: "Sensei", hi: "शिक्षक / डॉक्टर", mr: "शिक्षक / डॉक्टर", 
+              sentences: [
+                  {jp: "田中先生は優しいです。", rm: "Tanaka sensei wa yasashii desu.", hi: "तनाका सर बहुत दयालु हैं।", mr: "तनाका सर खूप दयाळू आहेत."},
+                  {jp: "先生に質問します。", rm: "Sensei ni shitsumon shimasu.", hi: "मैं शिक्षक से सवाल पूछता हूं।", mr: "मी शिक्षकांना प्रश्न विचारतो."}
+              ]
+            },
+
+            // Time & Days
+            { jp: "今日", rm: "Kyou", hi: "आज", mr: "आज", 
+              sentences: [
+                  {jp: "今日は暑いです。", rm: "Kyou wa atsui desu.", hi: "आज गर्मी है।", mr: "आज उष्णता आहे."},
+                  {jp: "今日は学校がありません。", rm: "Kyou wa gakkou ga arimasen.", hi: "आज स्कूल नहीं है।", mr: "आज शाळा नाही."}
+              ]
+            },
+            { jp: "明日", rm: "Ashita", hi: "कल", mr: "उद्या", 
+              sentences: [
+                  {jp: "明日は雨です。", rm: "Ashita wa ame desu.", hi: "कल बारिश होगी।", mr: "उद्या पाऊस आहे."},
+                  {jp: "明日会いましょう。", rm: "Ashita aimashou.", hi: "चलो कल मिलते हैं।", mr: "चला उद्या भेटूया."}
+              ]
+            },
+            { jp: "時間", rm: "Jikan", hi: "समय", mr: "वेळ", 
+              sentences: [
+                  {jp: "時間がありますか？", rm: "Jikan ga arimasu ka?", hi: "क्या आपके पास समय है?", mr: "तुमच्याकडे वेळ आहे का?"},
+                  {jp: "時間がありません。", rm: "Jikan ga arimasen.", hi: "समय नहीं है।", mr: "वेळ नाही."}
+              ]
+            },
+
+            // Food & Drink
+            { jp: "水", rm: "Mizu", hi: "पानी", mr: "पाणी", 
+              sentences: [
+                  {jp: "水をください。", rm: "Mizu o kudasai.", hi: "पानी दीजिए।", mr: "पाणी द्या."},
+                  {jp: "冷たい水が美味しい。", rm: "Tsumetai mizu ga oishii.", hi: "ठंडा पानी स्वादिष्ट है।", mr: "थंड पाणी चविष्ट आहे."}
+              ]
+            },
+            { jp: "ご飯", rm: "Gohan", hi: "चावल / भोजन", mr: "तांदूळ / जेवण", 
+              sentences: [
+                  {jp: "朝ご飯を食べました。", rm: "Asagohan o tabemashita.", hi: "मैंने नाश्ता किया।", mr: "मी नाश्ता केला."},
+                  {jp: "日本のご飯は美味しい。", rm: "Nihon no gohan wa oishii.", hi: "जापानी चावल स्वादिष्ट हैं।", mr: "जपानी तांदूळ चविष्ट आहेत."}
+              ]
+            },
+            { jp: "肉", rm: "Niku", hi: "मांस", mr: "मांस", 
+              sentences: [
+                  {jp: "私は肉が好きです。", rm: "Watashi wa niku ga suki desu.", hi: "मुझे मांस पसंद है।", mr: "मला मांस आवडते."},
+                  {jp: "牛肉は高いです。", rm: "Gyuuniku wa takai desu.", hi: "बीफ महंगा है।", mr: "बीफ महाग आहे."}
+              ]
+            },
+
+            // Verbs (Actions)
+            { jp: "行く", rm: "Iku", hi: "जाना", mr: "जाणे", 
+              sentences: [
+                  {jp: "日本に行きたい。", rm: "Nihon ni ikitai.", hi: "मैं जापान जाना चाहता हूं।", mr: "मला जपानला जायचे आहे."},
+                  {jp: "どこへ行きますか？", rm: "Doko e ikimasu ka?", hi: "आप कहाँ जा रहे हैं?", mr: "तुम्ही कुठे जात आहात?"}
+              ]
+            },
+            { jp: "見る", rm: "Miru", hi: "देखना", mr: "पाहणे", 
+              sentences: [
+                  {jp: "テレビを見ます。", rm: "Terebi o mimasu.", hi: "मैं टीवी देखता हूं।", mr: "मी टीव्ही पाहतो."},
+                  {jp: "あの山を見てください。", rm: "Ano yama o mite kudasai.", hi: "कृपया उस पहाड़ को देखें।", mr: "कृपया तो डोंगर पहा."}
+              ]
+            },
+            { jp: "買う", rm: "Kau", hi: "खरीदना", mr: "खरेदी करणे", 
+              sentences: [
+                  {jp: "本を買います。", rm: "Hon o kaimasu.", hi: "मैं किताब खरीदता हूं।", mr: "मी पुस्तक खरेदी करतो."},
+                  {jp: "何を买いますか？", rm: "Nani o kaimasu ka?", hi: "आप क्या खरीद रहे हैं?", mr: "तुम्ही काय खरेदी करत आहात?"}
+              ]
+            },
+            { jp: "勉強する", rm: "Benkyou suru", hi: "पढ़ाई करना", mr: "अभ्यास करणे", 
+              sentences: [
+                  {jp: "日本語を勉強します。", rm: "Nihongo o benkyou shimasu.", hi: "मैं जापानी सीख रहा हूं।", mr: "मी जपानी शिकत आहे."},
+                  {jp: "毎日勉強します。", rm: "Mainichi benkyou shimasu.", hi: "मैं रोज पढ़ाई करता हूं।", mr: "मी रोज अभ्यास करतो."}
+              ]
+            },
+            { jp: "話す", rm: "Hanasu", hi: "बोलना", mr: "बोलणे", 
+              sentences: [
+                  {jp: "日本語を話せます。", rm: "Nihongo o hanasemasu.", hi: "मैं जापानी बोल सकता हूं।", mr: "मी जपानी बोलू शकतो."},
+                  {jp: "彼と話をしました。", rm: "Kare to hanashi o shimashita.", hi: "मैंने उससे बात की।", mr: "मी त्याच्याशी बोललो."}
+              ]
+            },
+
+            // Adjectives
+            { jp: "大きい", rm: "Ookii", hi: "बड़ा", mr: "मोठा", 
+              sentences: [
+                  {jp: "これは大きい箱です。", rm: "Kore wa ookii hako desu.", hi: "यह एक बड़ा डिब्बा है।", mr: "हे एक मोठे पेटी आहे."},
+                  {jp: "東京は大きいです。", rm: "Tokyo wa ookii desu.", hi: "टोक्यो बड़ा है।", mr: "टोक्यो मोठे आहे."}
+              ]
+            },
+            { jp: "小さい", rm: "Chiisai", hi: "छोटा", mr: "लहान", 
+              sentences: [
+                  {jp: "小さい猫です。", rm: "Chiisai neko desu.", hi: "यह एक छोटी बिल्ली है।", mr: "ही एक लहान मांजर आहे."},
+                  {jp: "部屋が小さい。", rm: "Heya ga chiisai.", hi: "कमरा छोटा है।", mr: "खोली लहान आहे."}
+              ]
+            },
+            { jp: "新しい", rm: "Atarashii", hi: "नया", mr: "नवीन", 
+              sentences: [
+                  {jp: "新しい車を買いました。", rm: "Atarashii kuruma o kaimashita.", hi: "मैंने नई कार खरीदी।", mr: "मी नवीन कार खरेदी केली."},
+                  {jp: "これは新しい本です。", rm: "Kore wa atarashii hon desu.", hi: "यह नई किताब है।", mr: "हे नवीन पुस्तक आहे."}
+              ]
+            },
+            { jp: "古い", rm: "Furui", hi: "पुराना", mr: "जुने", 
+              sentences: [
+                  {jp: "古い家です。", rm: "Furui ie desu.", hi: "यह पुराना घर है।", mr: "हे जुने घर आहे."},
+                  {jp: "彼は古い友達です。", rm: "Kare wa furui tomodachi desu.", hi: "वह पुराना दोस्त है।", mr: "तो जुना मित्र आहे."}
+              ]
+            },
+            { jp: "高い", rm: "Takai", hi: "महंगा / ऊंचा", mr: "महाग / उंच", 
+              sentences: [
+                  {jp: "この本は高い。", rm: "Kono hon wa takai.", hi: "यह किताब महंगी है।", mr: "हे पुस्तक महाग आहे."},
+                  {jp: "山が高いです。", rm: "Yama ga takai desu.", hi: "पहाड़ ऊंचा है।", mr: "डोंगर उंच आहे."}
+              ]
+            },
+            { jp: "安い", rm: "Yasui", hi: "सस्ता", mr: "स्वस्त", 
+              sentences: [
+                  {jp: "これは安いです。", rm: "Kore wa yasui desu.", hi: "यह सस्ता है।", mr: "हे स्वस्त आहे."},
+                  {jp: "安いレストランを探します。", rm: "Yasui resutoran o sagashimasu.", hi: "मैं सस्ता रेस्टोरेंट ढूंढ रहा हूं।", mr: "मी स्वस्त रेस्टॉरंट शोधत आहे."}
+              ]
+            },
+            { jp: "忙しい", rm: "Isogashii", hi: "व्यस्त", mr: "व्यस्त", 
+              sentences: [
+                  {jp: "今日は忙しいです。", rm: "Kyou wa isogashii desu.", hi: "आज मैं व्यस्त हूं।", mr: "आज मी व्यस्त आहे."},
+                  {jp: "彼はとても忙しい。", rm: "Kare wa totemo isogashii.", hi: "वह बहुत व्यस्त है।", mr: "तो खूप व्यस्त आहे."}
+              ]
+            },
+            { jp: "楽しい", rm: "Tanoshii", hi: "मजेदार", mr: "मजेशीर", 
+              sentences: [
+                  {jp: "旅行は楽しい。", rm: "Ryokou wa tanoshii.", hi: "यात्रा मजेदार है।", mr: "प्रवास मजेशीर आहे."},
+                  {jp: "楽しい時間でした。", rm: "Tanoshii jikan deshita.", hi: "यह मजेदार समय था।", mr: "हे मजेशीर वेळ होते."}
+              ]
+            },
+            { jp: "面白い", rm: "Omoshiroi", hi: "दिलचस्प / मजेदार", mr: "रंजक / मजेशीर", 
+              sentences: [
+                  {jp: "その映画は面白い。", rm: "Sono eiga wa omoshiroi.", hi: "वह फिल्म दिलचस्प है।", mr: "तो चित्रपट रंजक आहे."},
+                  {jp: "面白い話ですね。", rm: "Omoshiroi hanashi desu ne.", hi: "यह एक दिलचस्प कहानी है।", mr: "ही एक रंजक गोष्ट आहे."}
+              ]
+            },
+            { jp: "好き", rm: "Suki", hi: "पसंद", mr: "आवड", 
+              sentences: [
+                  {jp: "私は猫が好きです。", rm: "Watashi wa neko ga suki desu.", hi: "मुझे बिल्लियां पसंद हैं।", mr: "मला मांजरे आवडतात."},
+                  {jp: "何が好きですか？", rm: "Nani ga suki desu ka?", hi: "आपको क्या पसंद है?", mr: "तुम्हाला काय आवडते?"}
+              ]
+            },
+            { jp: "嫌い", rm: "Kirai", hi: "नापसंद", mr: "नावड", 
+              sentences: [
+                  {jp: "野菜が嫌いです。", rm: "Yasai ga kirai desu.", hi: "मुझे सब्जियां पसंद नहीं हैं।", mr: "मला भाज्या आवडत नाहीत."},
+                  {jp: "彼は嘘が嫌いだ。", rm: "Kare wa uso ga kirai da.", hi: "उसे झूठ पसंद नहीं है।", mr: "त्याला खोटे आवडत नाही."}
+              ]
+            }
+        ];
+
+        // 3. Kanji Data (Essential Set)
+        const kanjiData = [
+            { k: "日", rm: "Nichi / Hi", m: "Sun / Day", hi: "सूर्य / दिन", mr: "सूर्य / दिवस",
+              sentences: [{jp:"日本 (Nihon)", rm:"Japan", hi:"जापान", mr:"जपान"}, {jp:"日曜日 (Nichiyoubi)", rm:"Sunday", hi:"रविवार", mr:"रविवार"}] },
+            { k: "月", rm: "Getsu / Tsuki", m: "Moon / Month", hi: "चंद्रमा / महीना", mr: "चंद्र / महिना",
+              sentences: [{jp:"月曜日 (Getsuyoubi)", rm:"Monday", hi:"सोमवार", mr:"सोमवार"}, {jp:"一月 (Ichigatsu)", rm:"January", hi:"जनवरी", mr:"जानेवारी"}] },
+            { k: "火", rm: "Ka / Hi", m: "Fire", hi: "आग", mr: "आग",
+              sentences: [{jp:"火曜日 (Kayoubi)", rm:"Tuesday", hi:"मंगलवार", mr:"मंगळवार"}, {jp:"火事 (Kaji)", rm:"Fire accident", hi:"आग लगना", mr:"आग लागणे"}] },
+            { k: "水", rm: "Sui / Mizu", m: "Water", hi: "पानी", mr: "पाणी",
+              sentences: [{jp:"水曜日 (Suiyoubi)", rm:"Wednesday", hi:"बुधवार", mr:"बुधवार"}, {jp:"水泳 (Suiei)", rm:"Swimming", hi:"तैराकी", mr:"पोहणे"}] },
+            { k: "木", rm: "Moku / Ki", m: "Tree / Wood", hi: "पेड़ / लकड़ी", mr: "झाड / लाकूड",
+              sentences: [{jp:"木曜日 (Mokuyoubi)", rm:"Thursday", hi:"गुरुवार", mr:"गुरुवार"}, {jp:"大木 (Taiboku)", rm:"Big tree", hi:"बड़ा पेड़", mr:"मोठे झाड"}] },
+            { k: "金", rm: "Kin / Kane", m: "Gold / Money", hi: "सोना / पैसा", mr: "सोने / पैसे",
+              sentences: [{jp:"金曜日 (Kinyoubi)", rm:"Friday", hi:"शुक्रवार", mr:"शुक्रवार"}, {jp:"お金 (Okane)", rm:"Money", hi:"पैसा", mr:"पैसे"}] },
+            { k: "土", rm: "Do / Tsuchi", m: "Earth / Soil", hi: "धरती / मिट्टी", mr: "पृथ्वी / माती",
+              sentences: [{jp:"土曜日 (Doyoubi)", rm:"Saturday", hi:"शनिवार", mr:"शनिवार"}, {jp:"土地 (Tochi)", rm:"Land", hi:"जमीन", mr:"जमीन"}] },
+            { k: "人", rm: "Jin / Hito", m: "Person", hi: "इंसान", mr: "माणूस",
+              sentences: [{jp:"日本人 (Nihonjin)", rm:"Japanese person", hi:"जापानी व्यक्ति", mr:"जपानी व्यक्ती"}, {jp:"大人 (Otona)", rm:"Adult", hi:"वयस्क", mr:"प्रौढ"}] },
+            { k: "大", rm: "Dai", m: "Big", hi: "बड़ा", mr: "मोठा",
+              sentences: [{jp:"大学 (Daigaku)", rm:"University", hi:"विश्वविद्यालय", mr:"विद्यापीठ"}, {jp:"大きい (Ookii)", rm:"Big", hi:"बड़ा", mr:"मोठा"}] },
+            { k: "小", rm: "Shou", m: "Small", hi: "छोटा", mr: "लहान",
+              sentences: [{jp:"小学校 (Shougakkou)", rm:"Elementary School", hi:"प्राथमिक स्कूल", mr:"प्राथमिक शाळा"}, {jp:"小さい (Chiisai)", rm:"Small", hi:"छोटा", mr:"लहान"}] },
+            { k: "中", rm: "Chuu", m: "Middle / Inside", hi: "मध्य / अंदर", mr: "मध्य / आत",
+              sentences: [{jp:"中学校 (Chuugakkou)", rm:"Junior High School", hi:"माध्यमिक स्कूल", mr:"माध्यमिक शाळा"}, {jp:"中国 (Chuugoku)", rm:"China", hi:"चीन", mr:"चीन"}] },
+            { k: "山", rm: "San / Yama", m: "Mountain", hi: "पहाड़", mr: "डोंगर",
+              sentences: [{jp:"富士山 (Fujisan)", rm:"Mt. Fuji", hi:"फूजी पर्वत", mr:"फुजी पर्वत"}, {jp:"山道 (Sandou)", rm:"Mountain path", hi:"पहाड़ी रास्ता", mr:"डोंगराचा रस्ता"}] },
+            { k: "川", rm: "Sen / Kawa", m: "River", hi: "नदी", mr: "नदी",
+              sentences: [{jp:"小川 (Ogawa)", rm:"Stream", hi:"छोटी नदी", mr:"लहान नदी"}, {jp:"川魚 (Kawazakana)", rm:"River fish", hi:"नदी की मछली", mr:"नदीतील मासा"}] },
+            { k: "口", rm: "Kou / Kuchi", m: "Mouth", hi: "मुंह", mr: "तोंड",
+              sentences: [{jp:"入口 (Iriguchi)", rm:"Entrance", hi:"प्रवेश द्वार", mr:"प्रवेशद्वार"}, {jp:"出口 (Deguchi)", rm:"Exit", hi:"निकास", mr:"निर्गमन"}] },
+            { k: "目", rm: "Moku / Me", m: "Eye", hi: "आंख", mr: "डोळा",
+              sentences: [{jp:"目的 (Mokuteki)", rm:"Purpose", hi:"उद्देश्य", mr:"उद्देश"}, {jp:"目玉 (Medama)", rm:"Eyeball", hi:"आंख की पुतली", mr:"डोळ्याचा बुबुळ"}] },
+            { k: "耳", rm: "Ji / Mimi", m: "Ear", hi: "कान", mr: "कान",
+              sentences: [{jp:"耳鼻科 (Jibika)", rm:"ENT Doctor", hi:"नाक-कान डॉक्टर", mr:"नाक-कान डॉक्टर"}, {jp:"耳打ち (Mimiuchi)", rm:"Whisper", hi:"फुसफुसाना", mr:"कानात सांगणे"}] },
+            { k: "手", rm: "Shu / Te", m: "Hand", hi: "हाथ", mr: "हात",
+              sentences: [{jp:"手紙 (Tegami)", rm:"Letter", hi:"चिट्ठी", mr:"पत्र"}, {jp:"右手 (Migite)", rm:"Right hand", hi:"दायां हाथ", mr:"उजवा हात"}] },
+            { k: "足", rm: "Soku / Ashi", m: "Foot / Leg", hi: "पैर / टांग", mr: "पाय",
+              sentences: [{jp:"不足 (Fusoku)", rm:"Insufficient", hi:"अपर्याप्त", mr:"अपुरे"}, {jp:"足音 (Ashioto)", rm:"Footsteps", hi:"पैरों की आवाज", mr:"पायांचा आवाज"}] },
+            { k: "力", rm: "Ryoku / Chikara", m: "Power / Strength", hi: "शक्ति", mr: "शक्ती",
+              sentences: [{jp:"努力 (Doryoku)", rm:"Effort", hi:"प्रयास", mr:"प्रयत्न"}, {jp:"電力 (Denryoku)", rm:"Electric power", hi:"बिजली", mr:"वीज"}] },
+            { k: "気", rm: "Ki", m: "Spirit / Mind", hi: "मन / भावना", mr: "मन / भावना",
+              sentences: [{jp:"元気 (Genki)", rm:"Healthy/Energetic", hi:"स्वस्थ", mr:"तंदुरुस्त"}, {jp:"天気 (Tenki)", rm:"Weather", hi:"मौसम", mr:"हवामान"}] },
+            { k: "心", rm: "Shin / Kokoro", m: "Heart / Mind", hi: "दिल / मन", mr: "हृदय / मन",
+              sentences: [{jp:"心配 (Shinpai)", rm:"Worry", hi:"चिंता", mr:"काळजी"}, {jp:"安心 (Anshin)", rm:"Relief", hi:"राहत", mr:"दिलासा"}] },
+            { k: "生", rm: "Sei / Sho", m: "Life / Birth", hi: "जीवन / जन्म", mr: "जीवन / जन्म",
+              sentences: [{jp:"学生 (Gakusei)", rm:"Student", hi:"छात्र", mr:"विद्यार्थी"}, {jp:"先生 (Sensei)", rm:"Teacher", hi:"शिक्षक", mr:"शिक्षक"}] },
+            { k: "先", rm: "Sen / Saki", m: "Before / Ahead", hi: "पहले / आगे", mr: "आधी / पुढे",
+              sentences: [{jp:"先生 (Sensei)", rm:"Teacher", hi:"शिक्षक", mr:"शिक्षक"}, {jp:"先週 (Senshuu)", rm:"Last week", hi:"पिछला सप्ताह", mr:"मागील आठवडा"}] },
+            { k: "年", rm: "Nen", m: "Year", hi: "साल", mr: "वर्ष",
+              sentences: [{jp:"今年 (Kotoshi)", rm:"This year", hi:"इस साल", mr:"या वर्षी"}, {jp:"来年 (Rainen)", rm:"Next year", hi:"अगले साल", mr:"पुढील वर्षी"}] },
+            { k: "時", rm: "Ji / Toki", m: "Time", hi: "समय", mr: "वेळ",
+              sentences: [{jp:"時計 (Tokei)", rm:"Clock/Watch", hi:"घड़ी", mr:"घड्याळ"}, {jp:"時間 (Jikan)", rm:"Time", hi:"समय", mr:"वेळ"}] },
+            { k: "分", rm: "Bun / Fun", m: "Minute / Part", hi: "मिनट / हिस्सा", mr: "मिनिट / भाग",
+              sentences: [{jp:"十分 (Juubun)", rm:"Enough", hi:"काफी", mr:"पुरेसे"}, {jp:"五分 (Gofun)", rm:"5 minutes", hi:"5 मिनट", mr:"5 मिनिटे"}] },
+            { k: "半", rm: "Han", m: "Half", hi: "आधा", mr: "अर्धा",
+              sentences: [{jp:"半分 (Hanbun)", rm:"Half", hi:"आधा", mr:"अर्धा"}, {jp:"半年 (Hantoshi)", rm:"Half year", hi:"आधा साल", mr:"अर्धे वर्ष"}] },
+            { k: "前", rm: "Zen / Mae", m: "Before / Front", hi: "पहले / सामने", mr: "आधी / समोर",
+              sentences: [{jp:"午前 (Gozen)", rm:"AM (Before noon)", hi:"सुबह", mr:"सकाळ"}, {jp:"前日 (Zenjitsu)", rm:"Previous day", hi:"पिछला दिन", mr:"मागील दिवस"}] },
+            { k: "後", rm: "Go / Ato", m: "After / Behind", hi: "बाद / पीछे", mr: "नंतर / मागे",
+              sentences: [{jp:"午後 (Gogo)", rm:"PM (After noon)", hi:"दोपहर बाद", mr:"दुपार नंतर"}, {jp:"後で (Atode)", rm:"Later", hi:"बाद में", mr:"नंतर"}] },
+            { k: "上", rm: "Jou / Ue", m: "Up / Above", hi: "ऊपर", mr: "वर",
+              sentences: [{jp:"上手 (Jouzu)", rm:"Skillful", hi:"कुशल", mr:"कुशल"}, {jp:"机の上 (Tsukue no ue)", rm:"On the desk", hi:"डेस्क पर", mr:"डेस्कवर"}] },
+            { k: "下", rm: "Ka / Shita", m: "Down / Below", hi: "नीचे", mr: "खाली",
+              sentences: [{jp:"地下 (Chika)", rm:"Underground", hi:"भूमिगत", mr:"भूमिगत"}, {jp:"下手 (Heta)", rm:"Unskillful", hi:"अकुशल", mr:"अकुशल"}] },
+            { k: "左", rm: "Sa / Hidari", m: "Left", hi: "बाएं", mr: "डावे",
+              sentences: [{jp:"左手 (Hidarite)", rm:"Left hand", hi:"बायां हाथ", mr:"डावा हात"}, {jp:"左右 (Sayuu)", rm:"Left and right", hi:"दाएं-बाएं", mr:"उजवे-डावे"}] },
+            { k: "右", rm: "U / Migi", m: "Right", hi: "दाएं", mr: "उजवे",
+              sentences: [{jp:"右手 (Migite)", rm:"Right hand", hi:"दायां हाथ", mr:"उजवा हात"}, {jp:"左右 (Sayuu)", rm:"Left and right", hi:"दाएं-बाएं", mr:"उजवे-डावे"}] },
+            { k: "内", rm: "Nai / Uchi", m: "Inside", hi: "अंदर", mr: "आत",
+              sentences: [{jp:"国内 (Kokunai)", rm:"Domestic", hi:"घरेलू", mr:"देशांतर्गत"}, {jp:"案内 (Annai)", rm:"Guidance", hi:"मार्गदर्शन", mr:"मार्गदर्शन"}] },
+            { k: "外", rm: "Gai / Soto", m: "Outside", hi: "बाहर", mr: "बाहेर",
+              sentences: [{jp:"外国 (Gaikoku)", rm:"Foreign country", hi:"विदेश", mr:"परदेश"}, {jp:"外出 (Gaishutsu)", rm:"Going out", hi:"बाहर जाना", mr:"बाहेर जाणे"}] },
+            { k: "間", rm: "Kan / Aida", m: "Interval / Between", hi: "अंतराल / बीच", mr: "अंतराळ / मध्ये",
+              sentences: [{jp:"時間 (Jikan)", rm:"Time", hi:"समय", mr:"वेळ"}, {jp:"人間 (Ningen)", rm:"Human", hi:"इंसान", mr:"माणूस"}] },
+            { k: "空", rm: "Kuu / Sora", m: "Sky / Empty", hi: "आसमान / खाली", mr: "आकाश / रिकामे",
+              sentences: [{jp:"空港 (Kuukou)", rm:"Airport", hi:"हवाई अड्डा", mr:"विमानतळ"}, {jp:"青空 (Aozora)", rm:"Blue sky", hi:"नीला आसमान", mr:"निळा आकाश"}] },
+            { k: "電", rm: "Den", m: "Electricity", hi: "बिजली", mr: "वीज",
+              sentences: [{jp:"電車 (Densha)", rm:"Train", hi:"ट्रेन", mr:"ट्रेन"}, {jp:"電話 (Denwa)", rm:"Telephone", hi:"टेलीफोन", mr:"टेलिफोन"}] },
+            { k: "車", rm: "Sha / Kuruma", m: "Car / Vehicle", hi: "कार / वाहन", mr: "कार / वाहन",
+              sentences: [{jp:"自動車 (Jidousha)", rm:"Car (Automobile)", hi:"कार", mr:"कार"}, {jp:"電車 (Densha)", rm:"Train", hi:"ट्रेन", mr:"ट्रेन"}] },
+            { k: "道", rm: "Dou / Michi", m: "Road / Way", hi: "रास्ता", mr: "रस्ता",
+              sentences: [{jp:"道路 (Douro)", rm:"Road", hi:"सड़क", mr:"रस्ता"}, {jp:"水道 (Suidou)", rm:"Water supply", hi:"पानी की आपूर्ति", mr:"पाणी पुरवठा"}] },
+            { k: "駅", rm: "Eki", m: "Station", hi: "स्टेशन", mr: "स्टेशन",
+              sentences: [{jp:"駅前 (Ekimae)", rm:"In front of station", hi:"स्टेशन के सामने", mr:"स्टेशनच्या समोर"}, {jp:"東京駅 (Tokyo Eki)", rm:"Tokyo Station", hi:"टोक्यो स्टेशन", mr:"टोक्यो स्टेशन"}] },
+            { k: "店", rm: "Ten / Mise", m: "Shop", hi: "दुकान", mr: "दुकान",
+              sentences: [{jp:"お店 (Omise)", rm:"Shop (Polite)", hi:"दुकान", mr:"दुकान"}, {jp:"書店 (Shoten)", rm:"Bookstore", hi:"किताबों की दुकान", mr:"पुस्तक विक्रेता"}] },
+            { k: "家", rm: "Ka / Ie", m: "House / Family", hi: "घर / परिवार", mr: "घर / कुटुंब",
+              sentences: [{jp:"家族 (Kazoku)", rm:"Family", hi:"परिवार", mr:"कुटुंब"}, {jp:"大家 (Ooya)", rm:"Landlord", hi:"मकान मालिक", mr:"मकान मालक"}] },
+            { k: "門", rm: "Mon / Kado", m: "Gate", hi: "गेट / दरवाजा", mr: "गेट / दरवाजा",
+              sentences: [{jp:"正門 (Seimon)", rm:"Main gate", hi:"मुख्य द्वार", mr:"मुख्य दरवाजा"}, {jp:"専門 (Senmon)", rm:"Specialty", hi:"विशेषज्ञता", mr:"विशेषज्ञता"}] },
+            { k: "問", rm: "Mon", m: "Question", hi: "सवाल", mr: "प्रश्न",
+              sentences: [{jp:"問題 (Mondai)", rm:"Problem/Question", hi:"समस्या/सवाल", mr:"समस्या/प्रश्न"}, {jp:"質問 (Shitsumon)", rm:"Question", hi:"प्रश्न", mr:"प्रश्न"}] },
+            { k: "語", rm: "Go", m: "Language / Word", hi: "भाषा / शब्द", mr: "भाषा / शब्द",
+              sentences: [{jp:"日本語 (Nihongo)", rm:"Japanese language", hi:"जापानी भाषा", mr:"जपानी भाषा"}, {jp:"英語 (Eigo)", rm:"English language", hi:"अंग्रेजी भाषा", mr:"इंग्रजी भाषा"}] },
+            { k: "話", rm: "Wa / Hanashi", m: "Talk / Story", hi: "बात / कहानी", mr: "गोष्ट / संवाद",
+              sentences: [{jp:"電話 (Denwa)", rm:"Telephone", hi:"टेलीफोन", mr:"टेलिफोन"}, {jp:"会話 (Kaiwa)", rm:"Conversation", hi:"बातचीत", mr:"संवाद"}] },
+            { k: "読", rm: "Doku / Yo", m: "Read", hi: "पढ़ना", mr: "वाचणे",
+              sentences: [{jp:"読書 (Dokusho)", rm:"Reading", hi:"पढ़ना", mr:"वाचन"}, {jp:"読者 (Dokusha)", rm:"Reader", hi:"पाठक", mr:"वाचक"}] },
+            { k: "書", rm: "Sho / Ka", m: "Write / Book", hi: "लिखना / किताब", mr: "लिहिणे / पुस्तक",
+              sentences: [{jp:"図書館 (Toshokan)", rm:"Library", hi:"लाइब्रेरी", mr:"ग्रंथालय"}, {jp:"辞書 (Jisho)", rm:"Dictionary", hi:"शब्दकोश", mr:"शब्दकोश"}] },
+            { k: "見", rm: "Ken / Mi", m: "See", hi: "देखना", mr: "पाहणे",
+              sentences: [{jp:"意見 (Iken)", rm:"Opinion", hi:"राय", mr:"मत"}, {jp:"見学 (Kengaku)", rm:"Field trip", hi:"शैक्षिक यात्रा", mr:"शैक्षणिक सहल"}] },
+            { k: "聞", rm: "Bun / Ki", m: "Hear / Ask", hi: "सुनना / पूछना", mr: "ऐकणे / विचारणे",
+              sentences: [{jp:"新聞 (Shinbun)", rm:"Newspaper", hi:"अखबार", mr:"वर्तमानपत्र"}, {jp:"見聞 (Kenbun)", rm:"What one sees and hears", hi:"देखना और सुनना", mr:"पाहणे आणि ऐकणे"}] },
+            { k: "食", rm: "Shoku / Ta", m: "Eat / Food", hi: "खाना", mr: "खाणे",
+              sentences: [{jp:"食堂 (Shokudou)", rm:"Cafeteria", hi:"कैंटीन", mr:"कॅफेटेरिया"}, {jp:"食事 (Shokuji)", rm:"Meal", hi:"भोजन", mr:"जेवण"}] },
+            { k: "飲", rm: "In / No", m: "Drink", hi: "पीना", mr: "पिणे",
+              sentences: [{jp:"飲料 (Inryou)", rm:"Beverage", hi:"पेय", mr:"पेय"}, {jp:"飲食 (Inshoku)", rm:"Food and drink", hi:"खाना पीना", mr:"खाणे पिणे"}] },
+            { k: "買", rm: "Bai / Ka", m: "Buy", hi: "खरीदना", mr: "खरेदी करणे",
+              sentences: [{jp:"買物 (Kaimono)", rm:"Shopping", hi:"खरीदारी", mr:"खरेदी"}, {jp:"売買 (Baibai)", rm:"Buying and selling", hi:"खरीद और बिक्री", mr:"खरेदी आणि विक्री"}] },
+            { k: "売", rm: "Bai / U", m: "Sell", hi: "बेचना", mr: "विकणे",
+              sentences: [{jp:"売店 (Baiten)", rm:"Shop stand", hi:"दुकान", mr:"दुकान"}, {jp:"売買 (Baibai)", rm:"Buying and selling", hi:"खरीद और बिक्री", mr:"खरेदी आणि विक्री"}] },
+            { k: "行", rm: "Kou / I", m: "Go", hi: "जाना", mr: "जाणे",
+              sentences: [{jp:"銀行 (Ginkou)", rm:"Bank", hi:"बैंक", mr:"बँक"}, {jp:"旅行 (Ryokou)", rm:"Travel", hi:"यात्रा", mr:"प्रवास"}] },
+            { k: "来", rm: "Rai / Ku", m: "Come", hi: "आना", mr: "येणे",
+              sentences: [{jp:"来年 (Rainen)", rm:"Next year", hi:"अगले साल", mr:"पुढील वर्षी"}, {jp:"未来 (Mirai)", rm:"Future", hi:"भविष्य", mr:"भविष्य"}] },
+            { k: "帰", rm: "Ki / Kae", m: "Return", hi: "लौटना", mr: "परत येणे",
+              sentences: [{jp:"帰国 (Kikoku)", rm:"Return to country", hi:"देश वापसी", mr:"देशात परतणे"}, {jp:"帰宅 (Kitaku)", rm:"Return home", hi:"घर लौटना", mr:"घरी परतणे"}] },
+            { k: "入", rm: "Nyu / Hai", m: "Enter", hi: "प्रवेश", mr: "प्रवेश",
+              sentences: [{jp:"入口 (Iriguchi)", rm:"Entrance", hi:"प्रवेश द्वार", mr:"प्रवेशद्वार"}, {jp:"入学 (Nyugaku)", rm:"Enrollment", hi:"दाखला", mr:"प्रवेश"}] },
+            { k: "出", rm: "Shutsu / De", m: "Exit / Go out", hi: "निकास / बाहर जाना", mr: "निर्गमन / बाहेर जाणे",
+              sentences: [{jp:"出口 (Deguchi)", rm:"Exit", hi:"निकास", mr:"निर्गमन"}, {jp:"出席 (Shusseki)", rm:"Attendance", hi:"उपस्थिति", mr:"हजेरी"}] },
+            { k: "立", rm: "Ritsu / Ta", m: "Stand", hi: "खड़ा होना", mr: "उभे राहणे",
+              sentences: [{jp:"独立 (Dokuritsu)", rm:"Independence", hi:"स्वतंत्रता", mr:"स्वातंत्र्य"}, {jp:"国立 (Kokuritsu)", rm:"National", hi:"राष्ट्रीय", mr:"राष्ट्रीय"}] },
+            { k: "休", rm: "Kyu / Yasu", m: "Rest", hi: "आराम", mr: "विश्रांती",
+              sentences: [{jp:"休憩 (Kyuukei)", rm:"Break", hi:"ब्रेक", mr:"विश्रांती"}, {jp:"休日 (Kyuujitsu)", rm:"Holiday", hi:"छुट्टी", mr:"सुट्टी"}] },
+            { k: "体", rm: "Tai / Karada", m: "Body", hi: "शरीर", mr: "शरीर",
+              sentences: [{jp:"体育 (Taiiku)", rm:"Physical education", hi:"शारीरिक शिक्षा", mr:"शारीरिक शिक्षण"}, {jp:"全体 (Zentai)", rm:"Whole", hi:"पूरा", mr:"संपूर्ण"}] },
+            { k: "作", rm: "Saku / Tsu", m: "Make", hi: "बनाना", mr: "करणे",
+              sentences: [{jp:"作文 (Sakubun)", rm:"Composition", hi:"निबंध", mr:"निबंध"}, {jp:"作品 (Sakuhin)", rm:"Work of art", hi:"कलाकृति", mr:"कलाकृती"}] },
+            { k: "使", rm: "Shi / Tsu", m: "Use", hi: "इस्तेमाल", mr: "वापर",
+              sentences: [{jp:"使用 (Shiyou)", rm:"Use", hi:"उपयोग", mr:"वापर"}, {jp:"大使 (Taishi)", rm:"Ambassador", hi:"राजदूत", mr:"राजदूत"}] },
+            { k: "持", rm: "Ji / Mo", m: "Hold", hi: "पकड़ना", mr: "धरणे",
+              sentences: [{jp:"気持ち (Kimochi)", rm:"Feeling", hi:"भावना", mr:"भावना"}, {jp:"持続 (Jizoku)", rm:"Continuation", hi:"निरंतरता", mr:"सातत्य"}] },
+            { k: "待", rm: "Tai / Ma", m: "Wait", hi: "इंतज़ार", mr: "वाट पाहणे",
+              sentences: [{jp:"期待 (Kitai)", rm:"Expectation", hi:"उम्मीद", mr:"अपेक्षा"}, {jp:"招待 (Shoutai)", rm:"Invitation", hi:"निमंत्रण", mr:"निमंत्रण"}] },
+            { k: "教", rm: "Kyou / Oshi", m: "Teach", hi: "सिखाना", mr: "शिकवणे",
+              sentences: [{jp:"教室 (Kyoushitsu)", rm:"Classroom", hi:"कक्षा", mr:"वर्ग"}, {jp:"宗教 (Shuukyou)", rm:"Religion", hi:"धर्म", mr:"धर्म"}] },
+            { k: "習", rm: "Shuu / Nara", m: "Learn", hi: "सीखना", mr: "शिकणे",
+              sentences: [{jp:"練習 (Renshuu)", rm:"Practice", hi:"अभ्यास", mr:"सराव"}, {jp:"学習 (Gakushuu)", rm:"Learning", hi:"सीखना", mr:"शिकणे"}] },
+            { k: "考", rm: "Kou / Kang", m: "Think", hi: "सोचना", mr: "विचार करणे",
+              sentences: [{jp:"参考 (Sankou)", rm:"Reference", hi:"संदर्भ", mr:"संदर्भ"}, {jp:"考慮 (Kouryo)", rm:"Consideration", hi:"विचार", mr:"विचार"}] },
+            { k: "思", rm: "Shi / Omo", m: "Think", hi: "सोचना", mr: "विचार करणे",
+              sentences: [{jp:"意思 (Ishi)", rm:"Intention", hi:"इरादा", mr:"इरादा"}, {jp:"思想 (Shisou)", rm:"Thought", hi:"विचार", mr:"विचार"}] },
+            { k: "知", rm: "Chi / Shi", m: "Know", hi: "जानना", mr: "जाणणे",
+              sentences: [{jp:"知識 (Chishiki)", rm:"Knowledge", hi:"ज्ञान", mr:"ज्ञान"}, {jp:"通知 (Tsuuchi)", rm:"Notice", hi:"सूचना", mr:"सूचना"}] },
+            { k: "理", rm: "Ri", m: "Reason / Logic", hi: "तर्क / कारण", mr: "तर्क / कारण",
+              sentences: [{jp:"理由 (Riyuu)", rm:"Reason", hi:"कारण", mr:"कारण"}, {jp:"料理 (Ryouri)", rm:"Cooking", hi:"खाना बनाना", mr:"शेअर"}] },
+            { k: "由", rm: "Yuu / Yo", m: "Reason / Cause", hi: "कारण", mr: "कारण",
+              sentences: [{jp:"理由 (Riyuu)", rm:"Reason", hi:"कारण", mr:"कारण"}, {jp:"自由 (Jiyuu)", rm:"Freedom", hi:"आजादी", mr:"स्वातंत्र्य"}] },
+            { k: "当", rm: "Tou / A", m: "Hit / Right", hi: "लगना / सही", mr: "लागणे / बरोबर",
+              sentences: [{jp:"当然 (Touzen)", rm:"Natural/Of course", hi:"स्वाभाविक", mr:"नैसर्गिक"}, {jp:"担当 (Tantou)", rm:"Charge/Responsibility", hi:"जिम्मेदारी", mr:"जबाबदारी"}] },
+            { k: "然", rm: "Zen", m: "So / Nature", hi: "ऐसा / प्रकृति", mr: "असे / निसर्ग",
+              sentences: [{jp:"自然 (Shizen)", rm:"Nature", hi:"प्रकृति", mr:"निसर्ग"}, {jp:"突然 (Totsuzen)", rm:"Sudden", hi:"अचानक", mr:"अचानक"}] },
+            { k: "全", rm: "Zen", m: "All / Whole", hi: "सब / पूरा", mr: "सर्व / संपूर्ण",
+              sentences: [{jp:"全部 (Zenbu)", rm:"All", hi:"सब", mr:"सर्व"}, {jp:"安全 (Anzen)", rm:"Safety", hi:"सुरक्षा", mr:"सुरक्षा"}] },
+            { k: "安", rm: "An / Yasu", m: "Peace / Cheap", hi: "शांति / सस्ता", mr: "शांती / स्वस्त",
+              sentences: [{jp:"安全 (Anzen)", rm:"Safety", hi:"सुरक्षा", mr:"सुरक्षा"}, {jp:"安心 (Anshin)", rm:"Relief", hi:"राहत", mr:"दिलासा"}] },
+            { k: "定", rm: "Tei / Sada", m: "Fix / Decide", hi: "तय करना", mr: "ठरवणे",
+              sentences: [{jp:"予定 (Yotei)", rm:"Plan", hi:"योजना", mr:"योजना"}, {jp:"定義 (Teigi)", rm:"Definition", hi:"परिभाषा", mr:"व्याख्या"}] },
+            { k: "決", rm: "Ketsu / Ki", m: "Decide", hi: "निर्णय", mr: "निर्णय",
+              sentences: [{jp:"決定 (Kettei)", rm:"Decision", hi:"निर्णय", mr:"निर्णय"}, {jp:"解決 (Kaiketsu)", rm:"Solution", hi:"समाधान", mr:"उपाय"}] },
+            { k: "法", rm: "Hou", m: "Law / Method", hi: "कानून / तरीका", mr: "कायदा / पद्धत",
+              sentences: [{jp:"方法 (Houhou)", rm:"Method", hi:"तरीका", mr:"पद्धत"}, {jp:"法律 (Houritsu)", rm:"Law", hi:"कानून", mr:"कायदा"}] },
+            { k: "度", rm: "Do / Tabi", m: "Degree / Time", hi: "डिग्री / बार", mr: "अंश / वेळा",
+              sentences: [{jp:"温度 (Ondo)", rm:"Temperature", hi:"तापमान", mr:"तापमान"}, {jp:"何度 (Nando)", rm:"How many times", hi:"कितनी बार", mr:"किती वेळा"}] },
+            { k: "数", rm: "Suu / Kazu", m: "Number", hi: "संख्या", mr: "संख्या",
+              sentences: [{jp:"数学 (Suugaku)", rm:"Mathematics", hi:"गणित", mr:"गणित"}, {jp:"人数 (Ninzuu)", rm:"Number of people", hi:"लोगों की संख्या", mr:"लोकांची संख्या"}] },
+            { k: "学", rm: "Gaku / Mana", m: "Study", hi: "पढ़ाई", mr: "अभ्यास",
+              sentences: [{jp:"学校 (Gakkou)", rm:"School", hi:"स्कूल", mr:"शाळा"}, {jp:"大学 (Daigaku)", rm:"University", hi:"विश्वविद्यालय", mr:"विद्यापीठ"}] },
+            { k: "校", rm: "Kou", m: "School", hi: "स्कूल", mr: "शाळा",
+              sentences: [{jp:"学校 (Gakkou)", rm:"School", hi:"स्कूल", mr:"शाळा"}, {jp:"校長 (Kouchou)", rm:"Principal", hi:"प्रधानाचार्य", mr:"प्राचार्य"}] },
+            { k: "高", rm: "Kou / Taka", m: "High", hi: "ऊंचा / महंगा", mr: "उंच / महाग",
+              sentences: [{jp:"高校 (Koukou)", rm:"High School", hi:"हाई स्कूल", mr:"हायस्कूल"}, {jp:"最高 (Saikou)", rm:"Best/Highest", hi:"सबसे अच्छा", mr:"सर्वोत्तम"}] },
+            { k: "低", rm: "Tei / Hiku", m: "Low", hi: "नीचा", mr: "कमी",
+              sentences: [{jp:"最低 (Saitei)", rm:"Lowest/Worst", hi:"सबसे कम", mr:"सर्वात कमी"}, {jp:"低温 (Teion)", rm:"Low temperature", hi:"कम तापमान", mr:"कमी तापमान"}] },
+            { k: "長", rm: "Chou / Naga", m: "Long", hi: "लंबा", mr: "लांब",
+              sentences: [{jp:"校長 (Kouchou)", rm:"Principal", hi:"प्रधानाचार्य", mr:"प्राचार्य"}, {jp:"社長 (Shachou)", rm:"Company President", hi:"कंपनी का मालिक", mr:"कंपनीचा मालक"}] },
+            { k: "短", rm: "Tan / Mijika", m: "Short", hi: "छोटा", mr: "लहान",
+              sentences: [{jp:"短時間 (Tankan)", rm:"Short time", hi:"कम समय", mr:"कमी वेळ"}, {jp:"長短 (Choutan)", rm:"Length", hi:"लंबाई", mr:"लांबी"}] },
+            { k: "多", rm: "Ta / Oo", m: "Many", hi: "ज्यादा", mr: "जास्त",
+              sentences: [{jp:"多数 (Tasuu)", rm:"Majority", hi:"बहुमत", mr:"बहुमत"}, {jp:"多少 (Tashou)", rm:"A little/Some", hi:"थोड़ा", mr:"थोडे"}] },
+            { k: "少", rm: "Shou / Suku", m: "Few", hi: "कम", mr: "कमी",
+              sentences: [{jp:"少年 (Shounen)", rm:"Boy", hi:"लड़का", mr:"मुलगा"}, {jp:"減少 (Genshou)", rm:"Decrease", hi:"कमी होना", mr:"कमी होणे"}] },
+            { k: "同", rm: "Dou / Ona", m: "Same", hi: "समान", mr: "समान",
+              sentences: [{jp:"同じ (Onaji)", rm:"Same", hi:"समान", mr:"समान"}, {jp:"合同 (Goudou)", rm:"Joint", hi:"संयुक्त", mr:"संयुक्त"}] },
+            { k: "別", rm: "Betsu / Waka", m: "Separate", hi: "अलग", mr: "वेगळे",
+              sentences: [{jp:"特別 (Tokubetsu)", rm:"Special", hi:"विशेष", mr:"विशेष"}, {jp:"区別 (Kubetsu)", rm:"Distinction", hi:"अंतर", mr:"फरक"}] },
+            { k: "新", rm: "Shin / Atara", m: "New", hi: "नया", mr: "नवीन",
+              sentences: [{jp:"新聞 (Shinbun)", rm:"Newspaper", hi:"अखबार", mr:"वर्तमानपत्र"}, {jp:"新年 (Shinnen)", rm:"New Year", hi:"नया साल", mr:"नवीन वर्ष"}] },
+            { k: "古", rm: "Ko / Furu", m: "Old", hi: "पुराना", mr: "जुने",
+              sentences: [{jp:"古代 (Kodai)", rm:"Ancient", hi:"प्राचीन", mr:"प्राचीन"}, {jp:"中古 (Chuuko)", rm:"Second-hand", hi:"पुराना (सेकंड हैंड)", mr:"जुने (सेकंड हँड)"}] },
+            { k: "白", rm: "Haku / Shiro", m: "White", hi: "सफेद", mr: "पांढरा",
+              sentences: [{jp:"白い (Shiroi)", rm:"White", hi:"सफेद", mr:"पांढरा"}, {jp:"告白 (Kokuhaku)", rm:"Confession", hi:"इजहार", mr:"कबुली"}] },
+            { k: "黒", rm: "Koku / Kuro", m: "Black", hi: "काला", mr: "काळा",
+              sentences: [{jp:"黒い (Kuroi)", rm:"Black", hi:"काला", mr:"काळा"}, {jp:"黒板 (Kokuban)", rm:"Blackboard", hi:"ब्लैकबोर्ड", mr:"ब्लॅकबोर्ड"}] },
+            { k: "赤", rm: "Seki / Aka", m: "Red", hi: "लाल", mr: "लाल",
+              sentences: [{jp:"赤い (Akai)", rm:"Red", hi:"लाल", mr:"लाल"}, {jp:"赤ちゃん (Akachan)", rm:"Baby", hi:"बच्चा", mr:"बाळ"}] },
+            { k: "青", rm: "Sei / Ao", m: "Blue", hi: "नीला", mr: "निळा",
+              sentences: [{jp:"青い (Aoi)", rm:"Blue", hi:"नीला", mr:"निळा"}, {jp:"青春 (Seishun)", rm:"Youth", hi:"जवानी", mr:"तरुणाई"}] },
+            { k: "緑", rm: "Ryoku / Midori", m: "Green", hi: "हरा", mr: "हिरवा",
+              sentences: [{jp:"緑色 (Midoriiro)", rm:"Green color", hi:"हरा रंग", mr:"हिरवा रंग"}, {jp:"緑茶 (Ryokucha)", rm:"Green tea", hi:"ग्रीन टी", mr:"ग्रीन टी"}] },
+            { k: "黄", rm: "Ou / Ki", m: "Yellow", hi: "पीला", mr: "पिवळा",
+              sentences: [{jp:"黄色 (Kiiro)", rm:"Yellow", hi:"पीला", mr:"पिवळा"}, {jp:"黄金 (Ougon)", rm:"Gold", hi:"सोना", mr:"सोने"}] },
+            { k: "花", rm: "Ka / Hana", m: "Flower", hi: "फूल", mr: "फूल",
+              sentences: [{jp:"花火 (Hanabi)", rm:"Fireworks", hi:"पटाखे", mr:"फटाके"}, {jp:"生け花 (Ikebana)", rm:"Flower arrangement", hi:"फूल सजाना", mr:"फुलांची मांडणी"}] },
+            { k: "草", rm: "Sou / Kusa", m: "Grass", hi: "घास", mr: "गवत",
+              sentences: [{jp:"草花 (Kusabana)", rm:"Flowers and plants", hi:"फूल और पौधे", mr:"फुले आणि झाडे"}, {jp:"雑草 (Zassou)", rm:"Weeds", hi:"खरपतवार", mr:"तण"}] },
+            { k: "林", rm: "Rin / Hayashi", m: "Woods", hi: "जंगल", mr: "जंगल",
+              sentences: [{jp:"森林 (Shinrin)", rm:"Forest", hi:"वन", mr:"वन"}, {jp:"林業 (Ringyou)", rm:"Forestry", hi:"वन विभाग", mr:"वन विभाग"}] },
+            { k: "森", rm: "Shin / Mori", m: "Forest", hi: "जंगल", mr: "जंगल",
+              sentences: [{jp:"森林 (Shinrin)", rm:"Forest", hi:"वन", mr:"वन"}, {jp:"青森 (Aomori)", rm:"Aomori (Place)", hi:"आओमोरी", mr:"आओमोरी"}] },
+            { k: "竹", rm: "Chiku / Take", m: "Bamboo", hi: "बांस", mr: "बांबू",
+              sentences: [{jp:"竹林 (Chikurin)", rm:"Bamboo grove", hi:"बांस का जंगल", mr:"बांबूचे जंगल"}, {jp:"竹刀 (Shinai)", rm:"Bamboo sword", hi:"बांस की तलवार", mr:"बांबूची तलवार"}] },
+            { k: "米", rm: "Bei / Kome", m: "Rice / America", hi: "चावल / अमेरिका", mr: "तांदूळ / अमेरिका",
+              sentences: [{jp:"米国 (Beikoku)", rm:"USA", hi:"अमेरिका", mr:"अमेरिका"}, {jp:"米飯 (Beihan)", rm:"Rice", hi:"चावल", mr:"तांदूळ"}] },
+            { k: "麦", rm: "Baku / Mugi", m: "Wheat / Barley", hi: "गेहूं / जौ", mr: "गहू / बार्ली",
+              sentences: [{jp:"麦茶 (Mugicha)", rm:"Barley tea", hi:"जौ की चाय", mr:"बार्ली चहा"}, {jp:"小麦 (Komugi)", rm:"Wheat", hi:"गेहूं", mr:"गहू"}] },
+            { k: "豆", rm: "Tou / Mame", m: "Bean", hi: "बीन", mr: "बीन",
+              sentences: [{jp:"大豆 (Daizu)", rm:"Soybean", hi:"सोयाबीन", mr:"सोयाबीन"}, {jp:"豆腐 (Tofu)", rm:"Tofu", hi:"टोफू", mr:"टोफू"}] },
+            { k: "魚", rm: "Gyo / Sakana", m: "Fish", hi: "मछली", mr: "मासा",
+              sentences: [{jp:"金魚 (Kingyo)", rm:"Goldfish", hi:"सुनहरी मछली", mr:"सुनहरी मासा"}, {jp:"魚屋 (Sakanaya)", rm:"Fishmonger", hi:"मछली बेचने वाला", mr:"मासे विकणारा"}] },
+            { k: "鳥", rm: "Chou / Tori", m: "Bird", hi: "पक्षी", mr: "पक्षी",
+              sentences: [{jp:"小鳥 (Kotori)", rm:"Small bird", hi:"छोटा पक्षी", mr:"लहान पक्षी"}, {jp:"鳥類 (Chourui)", rm:"Birds (class)", hi:"पक्षी वर्ग", mr:"पक्षी वर्ग"}] },
+            { k: "馬", rm: "Ba / Uma", m: "Horse", hi: "घोड़ा", mr: "घोडा",
+              sentences: [{jp:"馬車 (Basha)", rm:"Horse carriage", hi:"घोड़ा गाड़ी", mr:"घोडा गाडी"}, {jp:"競馬 (Keiba)", rm:"Horse racing", hi:"घोड़ दौड़", mr:"घोडदौड"}] },
+            { k: "犬", rm: "Ken / Inu", m: "Dog", hi: "कुत्ता", mr: "कुत्रा",
+              sentences: [{jp:"子犬 (Koinu)", rm:"Puppy", hi:"पिल्ला", mr:"पिल्ला"}, {jp:"愛犬 (Aiken)", rm:"Beloved dog", hi:"प्यारा कुत्ता", mr:"प्रिय कुत्रा"}] },
+            { k: "猫", rm: "Byou / Neko", m: "Cat", hi: "बिल्ली", mr: "मांजर",
+              sentences: [{jp:"子猫 (Koneko)", rm:"Kitten", hi:"बिल्ली का बच्चा", mr:"मांजराचे पिल्लू"}, {jp:"愛猫 (Aibyou)", rm:"Beloved cat", hi:"प्यारी बिल्ली", mr:"प्रिय मांजर"}] },
+            { k: "虫", rm: "Chuu / Mushi", m: "Insect", hi: "कीड़ा", mr: "किडा",
+              sentences: [{jp:"昆虫 (Konchuu)", rm:"Insect", hi:"कीट", mr:"कीटक"}, {jp:"虫歯 (Mushiba)", rm:"Cavity", hi:"दांत का कीड़ा", mr:"दाताचा कीडा"}] },
+            { k: "貝", rm: "Bai / Kai", m: "Shell", hi: "सीपी", mr: "शिंपले",
+              sentences: [{jp:"貝殻 (Kaigara)", rm:"Seashell", hi:"सीपी का खोल", mr:"शिंपल्याचे कवच"}, {jp:"二枚貝 (Nimaigai)", rm:"Bivalve", hi:"दो मुंह वाला सीपी", mr:"दोन मुखाचे शिंपले"}] },
+            { k: "雨", rm: "U / Ame", m: "Rain", hi: "बारिश", mr: "पाऊस",
+              sentences: [{jp:"大雨 (Ooame)", rm:"Heavy rain", hi:"भारी बारिश", mr:"मुसळधार पाऊस"}, {jp:"雨季 (Uki)", rm:"Rainy season", hi:"बरसात का मौसम", mr:"पावसाळी हंगाम"}] },
+            { k: "雪", rm: "Setsu / Yuki", m: "Snow", hi: "बर्फ", mr: "बर्फ",
+              sentences: [{jp:"大雪 (Ooyuki)", rm:"Heavy snow", hi:"भारी बर्फबारी", mr:"मुसळधार बर्फ"}, {jp:"雪山 (Yukiyama)", rm:"Snowy mountain", hi:"बर्फीला पहाड़", mr:"बर्फाच्छादित डोंगर"}] },
+            { k: "風", rm: "Fuu / Kaze", m: "Wind", hi: "हवा", mr: "वारा",
+              sentences: [{jp:"台風 (Taifuu)", rm:"Typhoon", hi:"तूफान", mr:"वादळ"}, {jp:"風景 (Fuukei)", rm:"Scenery", hi:"नजारा", mr:"निसर्ग"}] },
+            { k: "雲", rm: "Un / Kumo", m: "Cloud", hi: "बादल", mr: "ढग",
+              sentences: [{jp:"入道雲 (Nyoudougumo)", rm:"Cumulonimbus", hi:"बड़ा बादल", mr:"मोठा ढग"}, {jp:"雲海 (Unkai)", rm:"Sea of clouds", hi:"बादलों का समुद्र", mr:"ढगांचा समुद्र"}] },
+            { k: "星", rm: "Sei / Hoshi", m: "Star", hi: "तारा", mr: "तारा",
+              sentences: [{jp:"惑星 (Wakusei)", rm:"Planet", hi:"ग्रह", mr:"ग्रह"}, {jp:"流星 (Ryuusei)", rm:"Meteor", hi:"उल्का", mr:"उल्का"}] },
+            { k: "海", rm: "Kai / Umi", m: "Sea", hi: "समुद्र", mr: "समुद्र",
+              sentences: [{jp:"海外 (Kaigai)", rm:"Overseas", hi:"विदेश", mr:"परदेश"}, {jp:"海岸 (Kaigan)", rm:"Coast", hi:"तट", mr:"किनारा"}] },
+            { k: "島", rm: "Tou / Shima", m: "Island", hi: "द्वीप", mr: "बेट",
+              sentences: [{jp:"半島 (Hantou)", rm:"Peninsula", hi:"प्रायद्वीप", mr:"द्वीपकल्प"}, {jp:"島国 (Shimaguni)", rm:"Island nation", hi:"द्वीप देश", mr:"बेटाचा देश"}] },
+            { k: "岩", rm: "Gan / Iwa", m: "Rock", hi: "चट्टान", mr: "खडक",
+              sentences: [{jp:"岩山 (Iwayama)", rm:"Rocky mountain", hi:"चट्टानी पहाड़", mr:"खडकाळ डोंगर"}, {jp:"溶岩 (Yougan)", rm:"Lava", hi:"लावा", mr:"लावा"}] },
+            { k: "石", rm: "Seki / Ishi", m: "Stone", hi: "पत्थर", mr: "दगड",
+              sentences: [{jp:"石油 (Sekiyu)", rm:"Petroleum", hi:"पेट्रोलियम", mr:"पेट्रोलियम"}, {jp:"宝石 (Houseki)", rm:"Gemstone", hi:"रत्न", mr:"रत्न"}] },
+            { k: "銀", rm: "Gin", m: "Silver", hi: "चांदी", mr: "चांदी",
+              sentences: [{jp:"銀行 (Ginkou)", rm:"Bank", hi:"बैंक", mr:"बँक"}, {jp:"銀河 (Ginga)", rm:"Galaxy", hi:"आकाशगंगा", mr:"आकाशगंगा"}] },
+            { k: "鉄", rm: "Tetsu", m: "Iron", hi: "लोहा", mr: "लोखंड",
+              sentences: [{jp:"鉄道 (Tetsudou)", rm:"Railway", hi:"रेलवे", mr:"रेल्वे"}, {jp:"钢铁 (Koutetsu)", rm:"Steel", hi:"इस्पात", mr:"स्टील"}] },
+            { k: "銅", rm: "Dou", m: "Copper", hi: "तांबा", mr: "तांबे",
+              sentences: [{jp:"銅像 (Douzou)", rm:"Bronze statue", hi:"कांस्य की मूर्ति", mr:"कांस्याची मूर्ती"}, {jp:"青銅 (Seidou)", rm:"Bronze", hi:"कांस्य", mr:"कांस्य"}] }
+        ];
+
+        // --- FUNCTIONS ---
+
+        // Tab Switching
+        function showSection(sectionId) {
+            // Hide all sections
+            document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+            
+            // Show selected section
+            document.getElementById(sectionId).classList.add('active');
+            
+            // Highlight button
+            const buttons = document.querySelectorAll('.nav-btn');
+            if(sectionId === 'hiragana') buttons[0].classList.add('active');
+            if(sectionId === 'vocabulary') buttons[1].classList.add('active');
+            if(sectionId === 'kanji') buttons[2].classList.add('active');
+        }
+
+        // Render Hiragana Grid
+        function initHiragana() {
+            const grid = document.getElementById('kanaGrid');
+            for (const key in hiraganaData) {
+                const item = hiraganaData[key];
+                const btn = document.createElement('div');
+                btn.className = 'kana-btn';
+                btn.innerText = item.char;
+                btn.onclick = () => showHiraganaDetails(key, btn);
+                grid.appendChild(btn);
+            }
+        }
+
+        // Show Hiragana Details
+        function showHiraganaDetails(key, btn) {
+            document.querySelectorAll('.kana-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            const data = hiraganaData[key];
+            const container = document.getElementById('hiragana-details');
+            
+            let html = `<h2>Letter: ${data.char} (${data.rm})</h2>`;
+            data.words.forEach(w => {
+                html += `
+                <div class="card">
+                    <div class="japanese-text">${w.jp}</div>
+                    <span class="romaji">${w.rm}</span>
+                    <div class="meaning">
+                        <span><span class="tag">Hindi</span> ${w.hi}</span>
+                        <span><span class="tag">Marathi</span> ${w.mr}</span>
+                    </div>
+                </div>`;
+            });
+            container.innerHTML = html;
+        }
+
+        // Render Vocabulary List
+        function renderVocabulary() {
+            const container = document.getElementById('vocab-list');
+            let html = '';
+            vocabularyData.forEach(item => {
+                let sentencesHtml = '';
+                item.sentences.forEach(s => {
+                    sentencesHtml += `
+                        <div class="sentence-box">
+                            <div class="sentence-jp">${s.jp} <span style="font-size:14px; color:#888">(${s.rm})</span></div>
+                            <div class="sentence-meaning">${s.hi} | ${s.mr}</div>
+                        </div>
+                    `;
+                });
+
+                html += `
+                <div class="card">
+                    <div class="japanese-text">${item.jp}</div>
+                    <span class="romaji">${item.rm}</span>
+                    <div class="meaning">
+                        <span><span class="tag">Hindi</span> ${item.hi}</span>
+                        <span><span class="tag">Marathi</span> ${item.mr}</span>
+                    </div>
+                    <div style="margin-top:15px; font-weight:bold; color:#2c3e50;">Example Sentences:</div>
+                    ${sentencesHtml}
+                </div>`;
+            });
+            container.innerHTML = html;
+        }
+
+        // Render Kanji List
+        function renderKanji() {
+            const container = document.getElementById('kanji-list');
+            let html = '';
+            kanjiData.forEach(item => {
+                let sentencesHtml = '';
+                item.sentences.forEach(s => {
+                    sentencesHtml += `
+                        <div class="sentence-box">
+                            <div class="sentence-jp">${s.jp} <span style="font-size:14px; color:#888">(${s.rm})</span></div>
+                            <div class="sentence-meaning">${s.hi} | ${s.mr}</div>
+                        </div>
+                    `;
+                });
+
+                html += `
+                <div class="card" style="border-left-color: #27ae60;">
+                    <div class="japanese-text" style="font-size:40px; color:#27ae60;">${item.k}</div>
+                    <span class="romaji">${item.rm}</span>
+                    <div class="meaning">
+                        <span><span class="tag">Meaning</span> ${item.m}</span>
+                        <span><span class="tag">Hindi</span> ${item.hi}</span>
+                        <span><span class="tag">Marathi</span> ${item.mr}</span>
+                    </div>
+                    <div style="margin-top:15px; font-weight:bold; color:#2c3e50;">Examples:</div>
+                    ${sentencesHtml}
+                </div>`;
+            });
+            container.innerHTML = html;
+        }
+
+        // Initialize everything
+        initHiragana();
+        renderVocabulary();
+        renderKanji();
+
+    </script>
+</body>
+</html>
+```
